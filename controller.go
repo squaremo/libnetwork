@@ -49,6 +49,7 @@ import (
 	"sync"
 
 	"github.com/docker/docker/pkg/stringid"
+	"github.com/docker/libnetwork/drivers/remote"
 	"github.com/docker/libnetwork/sandbox"
 	"github.com/docker/libnetwork/types"
 )
@@ -58,6 +59,9 @@ import (
 type NetworkController interface {
 	// ConfigureNetworkDriver applies the passed options to the driver instance for the specified network type
 	ConfigureNetworkDriver(networkType string, options map[string]interface{}) error
+
+	// Register a remote driver.
+	RegisterRemoteDriver(name string, r remote.Remote)
 
 	// Create a new network. The options parameter carries network specific options.
 	// Labels support will be added in the near future.
@@ -107,6 +111,10 @@ func (c *controller) ConfigureNetworkDriver(networkType string, options map[stri
 		return NetworkTypeError(networkType)
 	}
 	return d.Config(options)
+}
+
+func (c *controller) RegisterRemoteDriver(networkType string, driver remote.Remote) {
+	c.drivers[networkType] = remote.New(driver)
 }
 
 // NewNetwork creates a new network of the specified network type. The options
