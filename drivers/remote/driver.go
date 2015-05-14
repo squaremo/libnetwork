@@ -6,16 +6,25 @@ import (
 	"github.com/docker/libnetwork/driverapi"
 	"github.com/docker/libnetwork/sandbox"
 	"github.com/docker/libnetwork/types"
+
+	"github.com/docker/docker/plugins"
 )
 
 var errNoCallback = errors.New("No Callback handler registered with Driver")
 
-const remoteNetworkType = "remote"
-
 type driver struct {
+	networkType string
+	client      *plugins.Client
 }
 
-// Init does the necessary work to register remote drivers
+// New constructs a fresh remote driver
+func New(networkType string, client *plugins.Client) driverapi.Driver {
+	return &driver{
+		networkType,
+		client,
+	}
+}
+
 func Init(dc driverapi.DriverCallback) error {
 	return nil
 }
@@ -55,5 +64,5 @@ func (d *driver) Leave(nid, eid types.UUID, options map[string]interface{}) erro
 }
 
 func (d *driver) Type() string {
-	return remoteNetworkType
+	return d.networkType
 }

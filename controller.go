@@ -48,8 +48,11 @@ package libnetwork
 import (
 	"sync"
 
+	"github.com/docker/docker/plugins"
+
 	"github.com/docker/docker/pkg/stringid"
 	"github.com/docker/libnetwork/driverapi"
+	"github.com/docker/libnetwork/drivers/remote"
 	"github.com/docker/libnetwork/sandbox"
 	"github.com/docker/libnetwork/types"
 )
@@ -140,7 +143,12 @@ func (c *controller) NewNetwork(networkType, name string, options ...NetworkOpti
 	d, ok := c.drivers[networkType]
 	c.Unlock()
 	if !ok {
-		return nil, ErrInvalidNetworkDriver
+		pl, err := plugins.Get(networkType, "NetworkDriver")
+		if err != nil {
+			return nil, ErrInvalidNetworkDriver
+		}
+		d = remote.New(networkType, pl.Client)
+		c.drivers[networkType] = d
 	}
 
 	// Check if a network already exists with the specified network name
